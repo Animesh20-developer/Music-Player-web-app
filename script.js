@@ -1,210 +1,141 @@
+const USER={
+  username:"animesh25",
+  password:"12345"
+};
 
-const songs = [
+const songs=[
   {
-    title: "kesariya",
-    artist: "Arijit Singh",
-    src: "songs/song1.mp3",
-    cover: "https://placehold.co/400x400/7c3aed/ffffff?text=Song+1"
+    title:"Kesariya",
+    artist:"Arijit Singh",
+    src:"songs/song1.mp3",
+    cover:"https://placehold.co/400x400/7c3aed/fff?text=Song+1"
   },
   {
-    title: "Phir Aur Kya Chahiye",
-    artist: "Arijit Singh",
-    src: "songs/song2.mp3",
-    cover: "https://placehold.co/400x400/0891b2/ffffff?text=Song+2"
+    title:"Phir Aur Kya Chahiye",
+    artist:"Arijit Singh",
+    src:"songs/song2.mp3",
+    cover:"https://placehold.co/400x400/0891b2/fff?text=Song+2"
   },
   {
-    title: "Apna Bana Le",
-    artist: "Arijit Singh",
-    src: "songs/song3.mp3",
-    cover: "https://placehold.co/400x400/db2777/ffffff?text=Song+3"
+    title:"Apna Bana Le",
+    artist:"Arijit Singh",
+    src:"songs/song3.mp3",
+    cover:"https://placehold.co/400x400/db2777/fff?text=Song+3"
   }
 ];
-// const audio=document.querySelector("audio");
-// function playSong(song){
-//   audio.src=song.src;
-//   audio.play();
-// }
 
-const audio = document.getElementById("audio");
-const playBtn = document.getElementById("play");
-const progress = document.getElementById("progress");
-const volume = document.getElementById("volume");
+const login=document.getElementById("login");
+const music=document.getElementById("music");
+const audio=document.getElementById("audio");
 
-const title = document.getElementById("title");
-const artist = document.getElementById("artist");
-const cover = document.getElementById("cover");
+let index=0;
+let playing=false;
 
-const currentTime = document.getElementById("current-time");
-const duration = document.getElementById("duration");
-const songsContainer = document.getElementById("songs");
-const search = document.getElementById("search");
+document.getElementById("loginBtn").onclick=()=>{
+  let u=document.getElementById("username").value;
+  let p=document.getElementById("password").value;
 
-let currentIndex = 0;
-let isPlaying = false;
-let isShuffle = false;
-let isRepeat = false;
-
-function loadSong(index) {
-  currentIndex = index;
-
-  const song = songs[currentIndex];
-
-  title.textContent = song.title;
-  artist.textContent = song.artist;
-  cover.src = song.cover;
-
-  audio.src = song.src;
-
-  progress.value = 0;
-  currentTime.textContent = "0:00";
-  duration.textContent = "0:00";
-}
-
-function playSong() {
-  audio.play()
-    .then(() => {
-      isPlaying = true;
-      playBtn.textContent = "⏸";
-    })
-    .catch(() => {
-      isPlaying = false;
-      playBtn.textContent = "▶";
-    });
-}
-
-function pauseSong() {
-  audio.pause();
-  isPlaying = false;
-  playBtn.textContent = "▶";
-}
-
-playBtn.addEventListener("click", () => {
-  if (isPlaying) {
-    pauseSong();
-  } else {
-    playSong();
+  if(u===USER.username && p===USER.password){
+    login.classList.add("hidden");
+    music.classList.remove("hidden");
+    load(0);
+  }else{
+    document.getElementById("error").textContent=
+      "Wrong username or password!";
   }
-});
+};
 
-function nextSong() {
-  if (isShuffle) {
-    let nextIndex;
+function load(i){
+  index=i;
+  let s=songs[i];
 
-    do {
-      nextIndex = Math.floor(Math.random() * songs.length);
-    } while (songs.length > 1 && nextIndex === currentIndex);
+  document.getElementById("title").textContent=s.title;
+  document.getElementById("artist").textContent=s.artist;
+  document.getElementById("cover").src=s.cover;
+  audio.src=s.src;
+}
 
-    loadSong(nextIndex);
-  } else {
-    currentIndex = (currentIndex + 1) % songs.length;
-    loadSong(currentIndex);
+document.getElementById("play").onclick=()=>{
+  if(playing){
+    audio.pause();
+    playing=false;
+    document.getElementById("play").textContent="▶";
+  }else{
+    audio.play();
+    playing=true;
+    document.getElementById("play").textContent="⏸";
   }
+};
 
-  playSong();
-}
+document.getElementById("next").onclick=()=>{
+  load((index+1)%songs.length);
+  audio.play();
+  playing=true;
+};
 
-function prevSong() {
-  currentIndex =
-    (currentIndex - 1 + songs.length) % songs.length;
+document.getElementById("prev").onclick=()=>{
+  load((index-1+songs.length)%songs.length);
+  audio.play();
+  playing=true;
+};
 
-  loadSong(currentIndex);
-  playSong();
-}
+audio.onended=()=>{
+  load((index+1)%songs.length);
+  audio.play();
+};
 
-document.getElementById("next").addEventListener("click", nextSong);
-document.getElementById("prev").addEventListener("click", prevSong);
+document.getElementById("volume").oninput=e=>{
+  audio.volume=e.target.value;
+};
 
-document.getElementById("shuffle").addEventListener("click", () => {
-  isShuffle = !isShuffle;
-  document.getElementById("shuffle").style.opacity =
-    isShuffle ? "1" : "0.5";
-});
+audio.ontimeupdate=()=>{
+  if(audio.duration)
+    document.getElementById("progress").value=
+      audio.currentTime/audio.duration*100;
+};
 
-document.getElementById("repeat").addEventListener("click", () => {
-  isRepeat = !isRepeat;
-  document.getElementById("repeat").style.opacity =
-    isRepeat ? "1" : "0.5";
-});
+document.getElementById("progress").oninput=e=>{
+  audio.currentTime=
+    e.target.value/100*audio.duration;
+};
 
-audio.addEventListener("loadedmetadata", () => {
-  duration.textContent = formatTime(audio.duration);
-});
+function showSongs(list){
+  document.getElementById("songs").innerHTML="";
 
-audio.addEventListener("timeupdate", () => {
-  if (!audio.duration) return;
+  list.forEach((s)=>{
+    let i=songs.indexOf(s);
 
-  progress.value =
-    (audio.currentTime / audio.duration) * 100;
+    let div=document.createElement("div");
+    div.className="song";
 
-  currentTime.textContent = formatTime(audio.currentTime);
-});
-
-progress.addEventListener("input", () => {
-  if (!audio.duration) return;
-
-  audio.currentTime =
-    (progress.value / 100) * audio.duration;
-});
-
-volume.addEventListener("input", () => {
-  audio.volume = volume.value;
-});
-
-audio.addEventListener("ended", () => {
-  if (isRepeat) {
-    audio.currentTime = 0;
-    playSong();
-  } else {
-    nextSong();
-  }
-});
-
-function formatTime(time) {
-  if (!Number.isFinite(time)) return "0:00";
-
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-function displaySongs(songList) {
-  songsContainer.innerHTML = "";
-
-  songList.forEach((song) => {
-    const originalIndex = songs.indexOf(song);
-
-    const div = document.createElement("div");
-    div.className = "song";
-
-    div.innerHTML = `
-      <img src="${song.cover}" alt="Album cover">
+    div.innerHTML=`
+      <img src="${s.cover}">
       <div class="song-info">
-        <strong>${song.title}</strong>
-        <p>${song.artist}</p>
+        <b>${s.title}</b>
+        <p>${s.artist}</p>
       </div>
-      <span>▶</span>
+      ▶
     `;
 
-    div.addEventListener("click", () => {
-      loadSong(originalIndex);
-      playSong();
-    });
+    div.onclick=()=>{
+      load(i);
+      audio.play();
+      playing=true;
+    };
 
-    songsContainer.appendChild(div);
+    document.getElementById("songs").appendChild(div);
   });
 }
 
-search.addEventListener("input", () => {
-  const query = search.value.toLowerCase();
+showSongs(songs);
 
-  const filteredSongs = songs.filter((song) =>
-    song.title.toLowerCase().includes(query) ||
-    song.artist.toLowerCase().includes(query)
+document.getElementById("search").oninput=e=>{
+  let q=e.target.value.toLowerCase();
+
+  showSongs(
+    songs.filter(s=>
+      s.title.toLowerCase().includes(q) ||
+      s.artist.toLowerCase().includes(q)
+    )
   );
-
-  displaySongs(filteredSongs);
-});
-
-loadSong(0);
-displaySongs(songs);
+};
